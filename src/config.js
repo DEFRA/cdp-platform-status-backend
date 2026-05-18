@@ -119,6 +119,22 @@ export const config = convict({
     default: null,
     env: 'HTTP_PROXY'
   },
+  auth: {
+    username: {
+      doc: 'Basic auth username',
+      format: String,
+      default: 'admin',
+      env: 'ADMIN_USERNAME'
+    },
+    password: {
+      doc: 'Basic auth password stored as a plain text secret in Secrets Manager',
+      format: String,
+      default: null,
+      nullable: false,
+      env: 'ADMIN_PASSWORD',
+      sensitive: true
+    }
+  },
   tracing: {
     header: {
       doc: 'CDP tracing header name',
