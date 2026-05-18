@@ -6,6 +6,9 @@ export default defineConfig({
     environment: 'node',
     clearMocks: true,
     fileParallelism: false,
+    env: {
+      ADMIN_PASSWORD: 'test-password'
+    },
     coverage: {
       provider: 'v8',
       reportsDirectory: './coverage',

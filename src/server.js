@@ -11,6 +11,7 @@ import { pulse } from '#/plugins/pulse.js'
 import { requestTracing } from '#/plugins/request-tracing.js'
 import { setupProxy } from '#/common/helpers/proxy/setup-proxy.js'
 import { metrics } from '@defra/cdp-metrics'
+import { auth } from '#/plugins/auth.js'
 
 export async function createServer() {
   setupProxy()
@@ -57,6 +58,7 @@ export async function createServer() {
       plugin: mongoDb,
       options: config.get('mongo')
     },
+    auth,
     router
   ])
 
