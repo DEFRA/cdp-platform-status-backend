@@ -39,7 +39,7 @@ services:
 
   ################################################################################
 
-  cdp-node-backend-template:
+  cdp-platform-status-backend:
     build:
       context: .
       target: development
