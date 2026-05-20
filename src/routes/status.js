@@ -67,5 +67,5 @@ export const statusRoutes = [
       const squid = await checkSquid(request)
       return h.response({ checks: { squid } })
     }
-  },
+  }
 ]
