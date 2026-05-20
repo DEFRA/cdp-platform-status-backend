@@ -1,12 +1,13 @@
 import { health } from '#/routes/health.js'
 import { logs } from '#/routes/logs.js'
 import { killRoutes } from '#/routes/kill.js'
+import { statusRoutes } from '#/routes/status.js'
 
 export const router = {
   plugin: {
     name: 'router',
     register: (server, _options) => {
-      server.route([health].concat(logs, killRoutes(server)))
+      server.route([health].concat(statusRoutes, logs, killRoutes(server)))
     }
   }
 }
