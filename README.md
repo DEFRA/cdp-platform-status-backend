@@ -144,14 +144,14 @@ git config --global core.autocrlf false
 
 ## API endpoints
 
-| Endpoint                | Description                                   |
-| :---------------------- | :-------------------------------------------- |
-| `GET: /health`          | Health                                        |
-| `GET: /status/mongo`    | MongoDB connectivity (connect/insert/find/delete) |
-| `GET: /status/squid`    | Squid proxy (default + app-specific routes)   |
-| `GET: /status/s3`       | S3 (list/put/get/delete)                      |
-| `GET: /status/sqs`      | SQS (send/receive/delete)                     |
-| `GET: /status/sns`      | SNS (publish)                                 |
+| Endpoint             | Description                                       |
+| :------------------- | :------------------------------------------------ |
+| `GET: /health`       | Health                                            |
+| `GET: /status/mongo` | MongoDB connectivity (connect/insert/find/delete) |
+| `GET: /status/squid` | Squid proxy (default + app-specific routes)       |
+| `GET: /status/s3`    | S3 (list/put/get/delete)                          |
+| `GET: /status/sqs`   | SQS (send/receive/delete)                         |
+| `GET: /status/sns`   | SNS (publish)                                     |
 
 ## Development helpers
 
