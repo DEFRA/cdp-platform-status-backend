@@ -1,53 +1,8 @@
-const timeoutMs = 10000
-
-function normalizeError(error) {
-  if (error instanceof Error) {
-    return error.message
-  }
-
-  return String(error)
-}
-
-async function runWithTimeout(taskFn) {
-  return Promise.race([
-    taskFn(),
-    new Promise((_resolve, reject) => {
-      setTimeout(() => {
-        reject(new Error(`Timed out after ${timeoutMs}ms`))
-      }, timeoutMs)
-    })
-  ])
-}
-
-async function checkMongo(request) {
-  try {
-    await runWithTimeout(() => request.db.command({ ping: 1 }))
-    return { status: 'ok' }
-  } catch (error) {
-    request.logger.error({ err: error }, 'Mongo status check failed')
-    return { status: 'fail', reason: normalizeError(error) }
-  }
-}
-
-async function checkSquid(request) {
-  try {
-    const response = await fetch('https://www.gov.uk', {
-      signal: AbortSignal.timeout(timeoutMs)
-    })
-
-    if (response.ok) {
-      return { status: 'ok' }
-    }
-
-    return {
-      status: 'fail',
-      reason: `Unexpected response status ${response.status}`
-    }
-  } catch (error) {
-    request.logger.error({ err: error }, 'Squid status check failed')
-    return { status: 'fail', reason: normalizeError(error) }
-  }
-}
+import { checkMongo } from '#/checks/mongo.js'
+import { checkSquid } from '#/checks/squid.js'
+import { checkS3 } from '#/checks/s3.js'
+import { checkSqs } from '#/checks/sqs.js'
+import { checkSns } from '#/checks/sns.js'
 
 export const statusRoutes = [
   {
@@ -66,6 +21,33 @@ export const statusRoutes = [
     handler: async (request, h) => {
       const squid = await checkSquid(request)
       return h.response({ checks: { squid } })
+    }
+  },
+  {
+    method: 'GET',
+    path: '/status/s3',
+    options: { auth: false },
+    handler: async (request, h) => {
+      const s3 = await checkS3(request)
+      return h.response({ checks: { s3 } })
+    }
+  },
+  {
+    method: 'GET',
+    path: '/status/sqs',
+    options: { auth: false },
+    handler: async (request, h) => {
+      const sqs = await checkSqs(request)
+      return h.response({ checks: { sqs } })
+    }
+  },
+  {
+    method: 'GET',
+    path: '/status/sns',
+    options: { auth: false },
+    handler: async (request, h) => {
+      const sns = await checkSns(request)
+      return h.response({ checks: { sns } })
     }
   }
 ]

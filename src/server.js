@@ -12,6 +12,7 @@ import { requestTracing } from '#/plugins/request-tracing.js'
 import { setupProxy } from '#/common/helpers/proxy/setup-proxy.js'
 import { metrics } from '@defra/cdp-metrics'
 import { auth } from '#/plugins/auth.js'
+import { awsClients } from '#/plugins/aws-clients.js'
 
 export async function createServer() {
   setupProxy()
@@ -57,6 +58,10 @@ export async function createServer() {
     {
       plugin: mongoDb,
       options: config.get('mongo')
+    },
+    {
+      plugin: awsClients,
+      options: config.get('aws')
     },
     auth,
     router

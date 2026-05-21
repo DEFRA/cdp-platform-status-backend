@@ -7,7 +7,10 @@ export default defineConfig({
     clearMocks: true,
     fileParallelism: false,
     env: {
-      ADMIN_PASSWORD: 'test-password'
+      ADMIN_PASSWORD: 'test-password',
+      S3_BUCKET: 'test-bucket',
+      SQS_QUEUE_URL: 'https://sqs.eu-west-2.amazonaws.com/123456789012/test',
+      SNS_TOPIC_ARN: 'arn:aws:sns:eu-west-2:123456789012:test-topic'
     },
     coverage: {
       provider: 'v8',

@@ -119,6 +119,56 @@ export const config = convict({
     default: null,
     env: 'HTTP_PROXY'
   },
+  aws: {
+    region: {
+      doc: 'AWS region for SDK clients',
+      format: String,
+      default: 'eu-west-2',
+      env: 'AWS_REGION'
+    },
+    s3Endpoint: {
+      doc: 'Optional S3 endpoint override (e.g. localstack)',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'S3_ENDPOINT'
+    },
+    sqsEndpoint: {
+      doc: 'Optional SQS endpoint override (e.g. localstack)',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'SQS_ENDPOINT'
+    },
+    snsEndpoint: {
+      doc: 'Optional SNS endpoint override (e.g. localstack)',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'SNS_ENDPOINT'
+    },
+    s3Bucket: {
+      doc: 'S3 bucket name for platform status checks',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'S3_BUCKET'
+    },
+    sqsQueueUrl: {
+      doc: 'SQS queue URL for platform status checks',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'SQS_QUEUE_URL'
+    },
+    snsTopicArn: {
+      doc: 'SNS topic ARN for platform status checks',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'SNS_TOPIC_ARN'
+    }
+  },
   auth: {
     username: {
       doc: 'Basic auth username',
