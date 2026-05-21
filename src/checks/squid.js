@@ -16,7 +16,7 @@ async function probeUrl(url, request, label) {
     )
     return 'fail'
   } catch (error) {
-    request.logger.error({ err: error }, `Squid ${label} check failed`)
+    request.logger.error({ err: error, url }, `Squid ${label} check failed`)
     return normalizeError(error)
   }
 }
