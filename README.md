@@ -6,6 +6,7 @@ Core delivery platform Node.js Backend Template.
   - [Node.js](#nodejs)
 - [Local development](#local-development)
   - [Setup](#setup)
+  - [AWS services (Floci)](#aws-services-floci)
   - [Development](#development)
   - [Testing](#testing)
   - [Production](#production)
@@ -56,6 +57,35 @@ Install git hooks (optional)
 
 ```bash
 npm run git:hooks
+```
+
+### AWS services (Floci)
+
+This service requires S3, SQS, and SNS. For local development these are emulated by
+[Floci](https://floci.io) — a drop-in LocalStack replacement that runs on the same port (`4566`).
+
+**1. Start Floci:**
+
+```bash
+docker run -d -p 4566:4566 \
+  -e FLOCI_DEFAULT_REGION=eu-west-2 \
+  hectorvent/floci:latest-aws
+```
+
+**2. Create the required resources** (requires the AWS CLI):
+
+```bash
+aws --endpoint-url=http://localhost:4566 s3 mb s3://platform-status
+aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name platform_status
+aws --endpoint-url=http://localhost:4566 sns create-topic --name platform_status
+```
+
+**3. Configure environment variables:**
+
+Copy `.env.example` to `.env` — the Floci values are already filled in.
+
+```bash
+cp .env.example .env
 ```
 
 ### Development
@@ -114,11 +144,14 @@ git config --global core.autocrlf false
 
 ## API endpoints
 
-| Endpoint             | Description                    |
-| :------------------- | :----------------------------- |
-| `GET: /health`       | Health                         |
-| `GET: /example    `  | Example API (remove as needed) |
-| `GET: /example/<id>` | Example API (remove as needed) |
+| Endpoint             | Description                                       |
+| :------------------- | :------------------------------------------------ |
+| `GET: /health`       | Health                                            |
+| `GET: /status/mongo` | MongoDB connectivity (connect/insert/find/delete) |
+| `GET: /status/squid` | Squid proxy (default + app-specific routes)       |
+| `GET: /status/s3`    | S3 (list/put/get/delete)                          |
+| `GET: /status/sqs`   | SQS (send/receive/delete)                         |
+| `GET: /status/sns`   | SNS (publish)                                     |
 
 ## Development helpers
 
