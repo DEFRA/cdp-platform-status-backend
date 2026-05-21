@@ -59,10 +59,7 @@ export async function createServer() {
       plugin: mongoDb,
       options: config.get('mongo')
     },
-    {
-      plugin: awsClients,
-      options: config.get('aws')
-    },
+    awsClients,
     auth,
     router
   ])

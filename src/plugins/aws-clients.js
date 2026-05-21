@@ -1,25 +1,18 @@
 import { S3Client } from '@aws-sdk/client-s3'
 import { SQSClient } from '@aws-sdk/client-sqs'
 import { SNSClient } from '@aws-sdk/client-sns'
-
-function withOptionalEndpoint(region, endpoint) {
-  if (!endpoint) {
-    return { region }
-  }
-
-  return { region, endpoint }
-}
+import { config } from '#/config.js'
 
 export const awsClients = {
   plugin: {
     name: 'aws-clients',
     version: '1.0.0',
-    register(server, options) {
-      const { region, s3Endpoint, sqsEndpoint, snsEndpoint } = options
+    register(server) {
+      const region = config.get('aws.region')
 
-      const s3 = new S3Client(withOptionalEndpoint(region, s3Endpoint))
-      const sqs = new SQSClient(withOptionalEndpoint(region, sqsEndpoint))
-      const sns = new SNSClient(withOptionalEndpoint(region, snsEndpoint))
+      const s3 = new S3Client({ region })
+      const sqs = new SQSClient({ region })
+      const sns = new SNSClient({ region })
 
       server.decorate('server', 's3', s3)
       server.decorate('server', 'sqs', sqs)
