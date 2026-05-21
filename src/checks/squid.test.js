@@ -45,11 +45,17 @@ describe('#checkSquid', () => {
     })
   })
 
-  test('Should log error when a fetch throws', async () => {
+  test('Should log error with url when a fetch throws', async () => {
     fetchMock.mockRejectOnce(new Error('Network error'))
     fetchMock.mockResponseOnce('', { status: 200 })
 
     await checkSquid(request)
-    expect(request.logger.error).toHaveBeenCalled()
+    expect(request.logger.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        err: expect.any(Error),
+        url: 'https://www.gov.uk'
+      }),
+      'Squid default check failed'
+    )
   })
 })
