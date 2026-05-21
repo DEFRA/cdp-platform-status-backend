@@ -78,12 +78,6 @@ docker run -d -p 4566:4566 \
 aws --endpoint-url=http://localhost:4566 s3 mb s3://platform-status
 aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name platform_status
 aws --endpoint-url=http://localhost:4566 sns create-topic --name platform_status
-
-# Subscribe the SQS queue to the SNS topic so published messages land in the queue
-aws --endpoint-url=http://localhost:4566 sns subscribe \
-  --topic-arn arn:aws:sns:eu-west-2:000000000000:platform_status \
-  --protocol sqs \
-  --notification-endpoint arn:aws:sqs:eu-west-2:000000000000:platform_status
 ```
 
 **3. Configure environment variables:**
@@ -150,14 +144,14 @@ git config --global core.autocrlf false
 
 ## API endpoints
 
-| Endpoint             | Description                                       |
-| :------------------- | :------------------------------------------------ |
-| `GET: /health`       | Health                                            |
-| `GET: /status/mongo` | MongoDB connectivity (connect/insert/find/delete) |
-| `GET: /status/squid` | Squid proxy (default + app-specific routes)       |
-| `GET: /status/s3`    | S3 (list/put/get/delete)                          |
-| `GET: /status/sqs`   | SQS (send/receive/delete)                         |
-| `GET: /status/sns`   | SNS (publish)                                     |
+| Endpoint                | Description                                   |
+| :---------------------- | :-------------------------------------------- |
+| `GET: /health`          | Health                                        |
+| `GET: /status/mongo`    | MongoDB connectivity (connect/insert/find/delete) |
+| `GET: /status/squid`    | Squid proxy (default + app-specific routes)   |
+| `GET: /status/s3`       | S3 (list/put/get/delete)                      |
+| `GET: /status/sqs`      | SQS (send/receive/delete)                     |
+| `GET: /status/sns`      | SNS (publish)                                 |
 
 ## Development helpers
 
