@@ -69,7 +69,9 @@ export const networkRoutes = [
           headers: Object.fromEntries(response.headers.entries()),
           body,
           truncated,
-          bodyLimitKb: truncated ? Math.round(maxResponseBodyChars / 1024) : undefined
+          bodyLimitKb: truncated
+            ? Math.round(maxResponseBodyChars / 1024)
+            : undefined
         })
       } catch (error) {
         request.logger.error({ err: error, url }, 'Network check failed')
