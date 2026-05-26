@@ -9,7 +9,7 @@ const dnsTimeoutMs = 5000
 function withDnsTimeout(promise) {
   return Promise.race([
     promise,
-    new Promise((_, reject) =>
+    new Promise((_resolve, reject) =>
       setTimeout(
         () => reject(new Error(`DNS timeout after ${dnsTimeoutMs}ms`)),
         dnsTimeoutMs
