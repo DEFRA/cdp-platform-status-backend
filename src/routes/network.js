@@ -57,15 +57,9 @@ export const networkRoutes = [
         })
 
         const squidBlocked = response.status === 307
-
-        let body = ''
-        let truncated = false
-        if (!squidBlocked) {
-          const text = await response.text()
-          const truncatedText = text.slice(0, maxResponseBodyChars)
-          body = truncatedText
-          truncated = text.length > truncatedText.length
-        }
+        const text = squidBlocked ? '' : await response.text()
+        const truncated = !squidBlocked && text.length > maxResponseBodyChars
+        const body = truncated ? text.slice(0, maxResponseBodyChars) : text
 
         return h.response({
           ok: response.ok,
@@ -78,12 +72,10 @@ export const networkRoutes = [
         })
       } catch (error) {
         request.logger.error({ err: error, url }, 'Network check failed')
-        return h
-          .response({
-            ok: false,
-            error: normalizeError(error)
-          })
-          .code(502)
+        return h.response({
+          ok: false,
+          error: normalizeError(error)
+        })
       }
     }
   },
@@ -109,10 +101,10 @@ export const networkRoutes = [
       const ipv6 = ipv6Result.status === 'fulfilled' ? ipv6Result.value : []
 
       if (ipv4.length === 0 && ipv6.length === 0) {
-        const error =
-          ipv4Result.status === 'rejected'
-            ? normalizeError(ipv4Result.reason)
-            : 'No records found'
+        const errors = [ipv4Result, ipv6Result]
+          .filter((r) => r.status === 'rejected')
+          .map((r) => normalizeError(r.reason))
+        const error = errors.length ? errors.join('; ') : 'No records found'
         return h.response({ ok: false, hostname, ipv4, ipv6, error })
       }
 

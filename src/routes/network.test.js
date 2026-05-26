@@ -80,7 +80,7 @@ describe('#networkRoutes', () => {
       expect(statusCode).toBe(400)
     })
 
-    test('Should return 502 when fetch fails', async () => {
+    test('Should return ok:false when fetch fails', async () => {
       fetchMock.mockRejectOnce(new Error('connect ECONNREFUSED'))
 
       const { statusCode, result } = await server.inject({
@@ -90,7 +90,7 @@ describe('#networkRoutes', () => {
         headers: { Authorization: authHeader }
       })
 
-      expect(statusCode).toBe(502)
+      expect(statusCode).toBe(200)
       expect(result).toEqual({
         ok: false,
         error: 'connect ECONNREFUSED'
