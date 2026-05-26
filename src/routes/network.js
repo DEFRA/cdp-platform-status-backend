@@ -68,7 +68,8 @@ export const networkRoutes = [
           squidBlocked,
           headers: Object.fromEntries(response.headers.entries()),
           body,
-          truncated
+          truncated,
+          bodyLimitKb: truncated ? Math.round(maxResponseBodyChars / 1024) : undefined
         })
       } catch (error) {
         request.logger.error({ err: error, url }, 'Network check failed')
