@@ -1,24 +1,11 @@
 import { resolve4, resolve6 } from 'node:dns/promises'
 import net from 'node:net'
 import Joi from 'joi'
-import { normalizeError } from '#/checks/helpers.js'
+import { normalizeError, runWithTimeout, timeoutMs } from '#/checks/helpers.js'
 
-const maxResponseBodyChars = 16 * 1024
-const dnsTimeoutMs = 5000
+const maxResponseBodyChars = 1024 * 1024
 
-function withDnsTimeout(promise) {
-  return Promise.race([
-    promise,
-    new Promise((_resolve, reject) =>
-      setTimeout(
-        () => reject(new Error(`DNS timeout after ${dnsTimeoutMs}ms`)),
-        dnsTimeoutMs
-      )
-    )
-  ])
-}
-
-function checkTcpPort(host, port, timeoutMs = 5000) {
+function checkTcpPort(host, port) {
   return new Promise((resolve, reject) => {
     const socket = new net.Socket()
 
@@ -65,7 +52,7 @@ export const networkRoutes = [
 
       try {
         const response = await fetch(url, {
-          signal: AbortSignal.timeout(10000),
+          signal: AbortSignal.timeout(timeoutMs),
           redirect: 'manual'
         })
 
@@ -114,8 +101,8 @@ export const networkRoutes = [
       const { hostname } = request.payload
 
       const [ipv4Result, ipv6Result] = await Promise.allSettled([
-        withDnsTimeout(resolve4(hostname)),
-        withDnsTimeout(resolve6(hostname))
+        runWithTimeout(() => resolve4(hostname)),
+        runWithTimeout(() => resolve6(hostname))
       ])
 
       const ipv4 = ipv4Result.status === 'fulfilled' ? ipv4Result.value : []
