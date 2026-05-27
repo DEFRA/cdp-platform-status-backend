@@ -2,7 +2,9 @@ export const timeoutMs = 10000
 
 export function normalizeError(error) {
   if (error instanceof Error) {
-    return error.message
+    return error.cause instanceof Error
+      ? normalizeError(error.cause)
+      : error.message
   }
 
   return String(error)
