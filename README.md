@@ -18,6 +18,7 @@ Core delivery platform Node.js Backend Template.
 - [Development helpers](#development-helpers)
   - [MongoDB Locks](#mongodb-locks)
   - [Proxy](#proxy)
+  - [Testing Squid proxy locally](#testing-squid-proxy-locally)
 - [Docker](#docker)
   - [Development image](#development-image)
   - [Production image](#production-image)
@@ -200,24 +201,82 @@ Helper methods are also available in `/src/helpers/mongo-lock.js`.
 
 ### Proxy
 
-We are using forward-proxy which is set up by default. To make use of this: `import { fetch } from 'undici'` then
-because of the `setGlobalDispatcher(new ProxyAgent(proxyUrl))` calls will use the ProxyAgent Dispatcher
+On CDP all outbound traffic goes via the Squid proxy sidecar. The proxy URL is injected automatically as `HTTP_PROXY` /
+`HTTPS_PROXY`, and `NODE_USE_ENV_PROXY=1` is set so most Node.js HTTP clients pick it up without extra configuration.
 
-If you are not using Wreck, Axios or Undici or a similar http that uses `Request`. Then you may have to provide the
-proxy dispatcher:
+| Client     | Default (CDP)                      | Required tenant setup                  |
+| ---------- | ---------------------------------- | -------------------------------------- |
+| undici     | Via Squid (automatic)              | None                                   |
+| node-fetch | Via Squid (automatic)              | None                                   |
+| axios      | Via Squid (`proxy: false` pattern) | Set `axios.defaults.proxy = false`     |
+| Wreck      | **Not automatic** — bypasses proxy | Set `Wreck.agents = Https.globalAgent` |
 
-To add the dispatcher to your own client:
+See the [CDP proxy docs](https://github.com/DEFRA/cdp-documentation/blob/main/how-to/proxy.md) for full details.
 
-```javascript
-import { ProxyAgent } from 'undici'
+### Testing Squid proxy locally
 
-return await fetch(url, {
-  dispatcher: new ProxyAgent({
-    uri: proxyUrl,
-    keepAliveTimeout: 10,
-    keepAliveMaxTimeout: 10
-  })
-})
+By default `HTTP_PROXY` is `null` locally, so all routing behaves as direct. To test the proxy paths in the
+network checker, run a local Squid container and start the backend with the proxy env vars set.
+
+A restricted Squid config is provided at [`local/squid/squid.conf`](./local/squid/squid.conf). It only allows
+outbound access to the domains in its allowlist (e.g. `example.com`, `www.gov.uk`), blocking everything else with
+a 307 — mirroring CDP egress controls.
+
+**1. Start Squid:**
+
+```bash
+docker run -d \
+  --name local-squid \
+  -p 3128:3128 \
+  -v $(pwd)/local/squid/squid.conf:/etc/squid/squid.conf:ro \
+  ubuntu/squid:latest
+```
+
+**2. Add proxy env vars to `.env`:**
+
+```bash
+HTTP_PROXY=http://localhost:3128
+HTTPS_PROXY=http://localhost:3128
+```
+
+**3. Start the backend with `NODE_USE_ENV_PROXY` in the shell:**
+
+```bash
+NODE_USE_ENV_PROXY=1 npm run dev
+```
+
+> **Note:** `NODE_USE_ENV_PROXY` cannot be set in `.env` — Node processes it during startup
+> before `--env-file-if-exists` is loaded. `HTTP_PROXY` / `HTTPS_PROXY` in `.env` are fine
+> because they are read by application code at request time. On CDP the platform injects
+> `NODE_USE_ENV_PROXY` directly into the process environment, so Default routing works
+> automatically there.
+
+Each `/network/check` request logs `env.HTTP_PROXY`, `env.HTTPS_PROXY`, and `env.NODE_USE_ENV_PROXY` so you can
+confirm the proxy vars are active.
+
+**What to expect in the network checker:**
+
+| URL                                   | Routing               | Result                                     |
+| ------------------------------------- | --------------------- | ------------------------------------------ |
+| `https://example.com` (in ACL)        | Default / Force proxy | `200 OK` via Squid                         |
+| `https://www.google.com` (not in ACL) | Default / Force proxy | Squid **307 blocked**                      |
+| Any external URL                      | Force direct          | **Timeout** — bypasses Squid               |
+| Any external URL                      | Default (Wreck only)  | **Timeout** — Wreck does not use env proxy |
+
+To add more allowed domains for testing, edit `local/squid/squid.conf` and restart the container.
+
+**Follow Squid access logs:**
+
+```bash
+docker exec local-squid tail -f /var/log/squid/access.log
+```
+
+HTTPS requests appear as `CONNECT` entries (e.g. `TCP_TUNNEL/200` for allowed, `TCP_DENIED/403` for blocked).
+
+**Stop Squid when done:**
+
+```bash
+docker stop local-squid && docker rm local-squid
 ```
 
 ## Docker
