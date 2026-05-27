@@ -62,5 +62,9 @@ export async function fetchWithClient(
     })
   }
 
-  return undiciGet(url, options, timeoutMs, routing)
+  if (client === 'undici') {
+    return undiciGet(url, options, timeoutMs, routing)
+  }
+
+  throw new Error(`Unknown HTTP client: ${client}`)
 }
