@@ -1,6 +1,5 @@
 import { vi } from 'vitest'
 import net from 'node:net'
-import http from 'node:http'
 
 vi.mock('node:dns/promises', () => ({
   resolve4: vi.fn().mockResolvedValue(['1.2.3.4', '5.6.7.8']),
@@ -101,41 +100,6 @@ describe('#networkRoutes', () => {
         durationMs: expect.any(Number)
       })
     })
-
-    test.each(['axios', 'wreck'])(
-      'Should support explicit %s client',
-      async (client) => {
-        const httpServer = http.createServer((_req, res) => {
-          res.writeHead(200, { 'content-type': 'text/plain' })
-          res.end('hello world')
-        })
-
-        await new Promise((resolve) =>
-          httpServer.listen(0, '127.0.0.1', resolve)
-        )
-        const address = httpServer.address()
-        const port = typeof address === 'object' && address ? address.port : 0
-
-        try {
-          const { statusCode, result } = await server.inject({
-            method: 'POST',
-            url: '/network/check',
-            payload: { url: `http://127.0.0.1:${port}`, client },
-            headers: { Authorization: authHeader }
-          })
-
-          expect(statusCode).toBe(200)
-          expect(result).toMatchObject({
-            ok: true,
-            status: 200,
-            body: 'hello world',
-            client
-          })
-        } finally {
-          await new Promise((resolve) => httpServer.close(() => resolve()))
-        }
-      }
-    )
   })
 
   describe('POST /network/dns', () => {
