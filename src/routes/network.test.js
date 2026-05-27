@@ -1,4 +1,5 @@
 import { vi } from 'vitest'
+import net from 'node:net'
 
 vi.mock('node:dns/promises', () => ({
   resolve4: vi.fn().mockResolvedValue(['1.2.3.4', '5.6.7.8']),
@@ -42,7 +43,8 @@ describe('#networkRoutes', () => {
         statusText: 'OK',
         squidBlocked: false,
         body: 'hello world',
-        truncated: false
+        truncated: false,
+        durationMs: expect.any(Number)
       })
     })
 
@@ -65,7 +67,8 @@ describe('#networkRoutes', () => {
         ok: false,
         status: 307,
         squidBlocked: true,
-        body: ''
+        body: '',
+        durationMs: expect.any(Number)
       })
     })
 
@@ -91,9 +94,10 @@ describe('#networkRoutes', () => {
       })
 
       expect(statusCode).toBe(200)
-      expect(result).toEqual({
+      expect(result).toMatchObject({
         ok: false,
-        error: 'connect ECONNREFUSED'
+        error: 'connect ECONNREFUSED',
+        durationMs: expect.any(Number)
       })
     })
   })
@@ -112,7 +116,8 @@ describe('#networkRoutes', () => {
         ok: expect.any(Boolean),
         hostname: 'www.gov.uk',
         ipv4: expect.any(Array),
-        ipv6: expect.any(Array)
+        ipv6: expect.any(Array),
+        durationMs: expect.any(Number)
       })
     })
 
@@ -129,6 +134,33 @@ describe('#networkRoutes', () => {
   })
 
   describe('POST /network/port', () => {
+    test('Should return reachable with duration when host:port is reachable', async () => {
+      const tcpServer = net.createServer()
+      await new Promise((resolve) => tcpServer.listen(0, '127.0.0.1', resolve))
+      const address = tcpServer.address()
+      const port = typeof address === 'object' && address ? address.port : 0
+
+      try {
+        const { statusCode, result } = await server.inject({
+          method: 'POST',
+          url: '/network/port',
+          payload: { host: '127.0.0.1', port },
+          headers: { Authorization: authHeader }
+        })
+
+        expect(statusCode).toBe(200)
+        expect(result).toMatchObject({
+          ok: true,
+          host: '127.0.0.1',
+          port,
+          reachable: true,
+          durationMs: expect.any(Number)
+        })
+      } finally {
+        await new Promise((resolve) => tcpServer.close(resolve))
+      }
+    })
+
     test('Should return 400 when port is out of range', async () => {
       const { statusCode } = await server.inject({
         method: 'POST',

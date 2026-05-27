@@ -49,6 +49,7 @@ export const networkRoutes = [
     },
     handler: async (request, h) => {
       const { url } = request.payload
+      const start = performance.now()
 
       try {
         const response = await fetch(url, {
@@ -71,13 +72,15 @@ export const networkRoutes = [
           truncated,
           bodyLimitKb: truncated
             ? Math.round(maxResponseBodyChars / 1024)
-            : undefined
+            : undefined,
+          durationMs: Math.round(performance.now() - start)
         })
       } catch (error) {
         request.logger.error({ err: error, url }, 'Network check failed')
         return h.response({
           ok: false,
-          error: normalizeError(error)
+          error: normalizeError(error),
+          durationMs: Math.round(performance.now() - start)
         })
       }
     }
@@ -94,11 +97,13 @@ export const networkRoutes = [
     },
     handler: async (request, h) => {
       const { hostname } = request.payload
+      const start = performance.now()
 
       const [ipv4Result, ipv6Result] = await Promise.allSettled([
         runWithTimeout(() => resolve4(hostname)),
         runWithTimeout(() => resolve6(hostname))
       ])
+      const durationMs = Math.round(performance.now() - start)
 
       const ipv4 = ipv4Result.status === 'fulfilled' ? ipv4Result.value : []
       const ipv6 = ipv6Result.status === 'fulfilled' ? ipv6Result.value : []
@@ -108,10 +113,17 @@ export const networkRoutes = [
           .filter((r) => r.status === 'rejected')
           .map((r) => normalizeError(r.reason))
         const error = errors.length ? errors.join('; ') : 'No records found'
-        return h.response({ ok: false, hostname, ipv4, ipv6, error })
+        return h.response({
+          ok: false,
+          hostname,
+          ipv4,
+          ipv6,
+          error,
+          durationMs
+        })
       }
 
-      return h.response({ ok: true, hostname, ipv4, ipv6 })
+      return h.response({ ok: true, hostname, ipv4, ipv6, durationMs })
     }
   },
   {
@@ -127,10 +139,17 @@ export const networkRoutes = [
     },
     handler: async (request, h) => {
       const { host, port } = request.payload
+      const start = performance.now()
 
       try {
         await checkTcpPort(host, port)
-        return h.response({ ok: true, host, port, reachable: true })
+        return h.response({
+          ok: true,
+          host,
+          port,
+          reachable: true,
+          durationMs: Math.round(performance.now() - start)
+        })
       } catch (error) {
         request.logger.error({ err: error, host, port }, 'Port check failed')
         return h.response({
@@ -138,7 +157,8 @@ export const networkRoutes = [
           host,
           port,
           reachable: false,
-          error: normalizeError(error)
+          error: normalizeError(error),
+          durationMs: Math.round(performance.now() - start)
         })
       }
     }
