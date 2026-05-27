@@ -2,6 +2,7 @@ import { resolve4, resolve6 } from 'node:dns/promises'
 import net from 'node:net'
 import Joi from 'joi'
 import { normalizeError, runWithTimeout, timeoutMs } from '#/checks/helpers.js'
+import { HTTP_CLIENTS, fetchWithClient } from '#/http-clients/index.js'
 
 const maxResponseBodyChars = 1024 * 1024
 
@@ -43,19 +44,43 @@ export const networkRoutes = [
         payload: Joi.object({
           url: Joi.string()
             .uri({ scheme: ['http', 'https'] })
-            .required()
+            .required(),
+          client: Joi.string()
+            .valid(...HTTP_CLIENTS)
+            .default('undici'),
+          routing: Joi.string().valid('proxy', 'direct').optional()
         })
       }
     },
     handler: async (request, h) => {
-      const { url } = request.payload
+      const { url, client, routing } = request.payload
       const start = performance.now()
 
+      request.logger.info(
+        {
+          url,
+          client,
+          routing: routing ?? 'default',
+          env: {
+            HTTP_PROXY: process.env.HTTP_PROXY ?? null,
+            HTTPS_PROXY: process.env.HTTPS_PROXY ?? null,
+            NODE_USE_ENV_PROXY: process.env.NODE_USE_ENV_PROXY ?? null
+          }
+        },
+        'Network check started'
+      )
+
       try {
-        const response = await fetch(url, {
-          signal: AbortSignal.timeout(timeoutMs),
-          redirect: 'manual'
-        })
+        const response = await fetchWithClient(
+          client,
+          url,
+          {
+            signal: AbortSignal.timeout(timeoutMs),
+            redirect: 'manual'
+          },
+          timeoutMs,
+          routing
+        )
 
         const squidBlocked = response.status === 307
         const text = squidBlocked ? '' : await response.text()
@@ -70,6 +95,8 @@ export const networkRoutes = [
           headers: Object.fromEntries(response.headers.entries()),
           body,
           truncated,
+          client,
+          routing,
           bodyLimitKb: truncated
             ? Math.round(maxResponseBodyChars / 1024)
             : undefined,
@@ -79,6 +106,8 @@ export const networkRoutes = [
         request.logger.error({ err: error, url }, 'Network check failed')
         return h.response({
           ok: false,
+          client,
+          routing,
           error: normalizeError(error),
           durationMs: Math.round(performance.now() - start)
         })
