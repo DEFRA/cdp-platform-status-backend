@@ -6,6 +6,16 @@ import { HTTP_CLIENTS, fetchWithClient } from '#/http-clients/index.js'
 
 const maxResponseBodyChars = 1024 * 1024
 
+// AWS EC2 instance metadata / credential endpoints — block to prevent SSRF
+const BLOCKED_HOSTS = new Set([
+  '169.254.169.254', // IMDSv1 / IMDSv2
+  'fd00:ec2::254' // IPv6 IMDS
+])
+
+function isBlockedHost(host) {
+  return BLOCKED_HOSTS.has(host.toLowerCase().replace(/^\[|\]$/g, ''))
+}
+
 function checkTcpPort(host, port) {
   return new Promise((resolve, reject) => {
     const socket = new net.Socket()
@@ -56,6 +66,19 @@ export const networkRoutes = [
       const { url, client, routing } = request.payload
       const start = performance.now()
 
+      const parsedHost = new URL(url).hostname
+      if (isBlockedHost(parsedHost)) {
+        return h
+          .response({
+            ok: false,
+            client,
+            routing,
+            error: `${parsedHost} is a blocked endpoint`,
+            durationMs: 0
+          })
+          .code(400)
+      }
+
       request.logger.info(
         {
           url,
@@ -103,11 +126,18 @@ export const networkRoutes = [
           durationMs: Math.round(performance.now() - start)
         })
       } catch (error) {
+        // Squid returns 403 on CONNECT for HTTPS URLs not in the ACL —
+        // undici throws this as an error rather than returning a response
+        const squidBlocked =
+          error instanceof Error &&
+          error.message.includes('Proxy response (403)')
+
         request.logger.error({ err: error, url }, 'Network check failed')
         return h.response({
           ok: false,
           client,
           routing,
+          squidBlocked,
           error: normalizeError(error),
           durationMs: Math.round(performance.now() - start)
         })
@@ -169,6 +199,19 @@ export const networkRoutes = [
     handler: async (request, h) => {
       const { host, port } = request.payload
       const start = performance.now()
+
+      if (isBlockedHost(host)) {
+        return h
+          .response({
+            ok: false,
+            host,
+            port,
+            reachable: false,
+            error: `${host} is a blocked endpoint`,
+            durationMs: 0
+          })
+          .code(400)
+      }
 
       try {
         await checkTcpPort(host, port)
