@@ -162,6 +162,28 @@ export const config = convict({
       nullable: false,
       env: 'ADMIN_PASSWORD',
       sensitive: true
+    },
+    jwt: {
+      enabled: {
+        doc: 'JWT auth enabled',
+        format: Boolean,
+        default: false,
+        env: 'AUTH_JWT_ENABLED'
+      },
+      issuer: {
+        doc: 'JWT token issuer',
+        format: String,
+        default: null,
+        nullable: true,
+        env: 'AUTH_JWT_ISSUER'
+      },
+      audience: {
+        doc: 'JWT token audience',
+        format: String,
+        default: 'cdp-platform-status-backend',
+        nullable: true,
+        env: 'AUTH_JWT_AUDIENCE'
+      }
     }
   },
   tracing: {

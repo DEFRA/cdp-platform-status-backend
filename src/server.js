@@ -12,6 +12,7 @@ import { requestTracing } from '#/plugins/request-tracing.js'
 import { metrics } from '@defra/cdp-metrics'
 import { auth } from '#/plugins/auth.js'
 import { awsClients } from '#/plugins/aws-clients.js'
+import { jwtAuth } from '#/plugins/jwt-auth.js'
 
 export async function createServer() {
   const server = Hapi.server({
@@ -58,6 +59,7 @@ export async function createServer() {
       options: config.get('mongo')
     },
     awsClients,
+    jwtAuth,
     auth,
     router
   ])
