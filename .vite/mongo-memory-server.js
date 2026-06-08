@@ -11,7 +11,7 @@ beforeAll(async () => {
     autoStart: false
   })
   process.env.MONGO_URI = globalThis.__MONGO_URI__
-})
+}, 120_000)
 
 afterAll(async () => {
   await teardown()
