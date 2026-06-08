@@ -16,7 +16,7 @@ describe('#networkRoutes', () => {
     const { createServer } = await import('#/server.js')
     server = await createServer()
     await server.initialize()
-  }, 120_000)
+  })
 
   afterAll(async () => {
     if (server) {
