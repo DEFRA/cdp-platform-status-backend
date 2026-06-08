@@ -11,7 +11,9 @@ describe('#statusRoutes', () => {
   })
 
   afterAll(async () => {
-    await server.stop({ timeout: 0 })
+    if (server) {
+      await server.stop({ timeout: 0 })
+    }
   })
 
   describe('GET /status/mongo', () => {
