@@ -2,6 +2,7 @@ import { resolve4, resolve6 } from 'node:dns/promises'
 import net from 'node:net'
 import Joi from 'joi'
 import { normalizeError, runWithTimeout, timeoutMs } from '#/checks/helpers.js'
+import { config } from '#/config.js'
 import { HTTP_CLIENTS, fetchWithClient } from '#/http-clients/index.js'
 
 const maxResponseBodyChars = 1024 * 1024
@@ -107,6 +108,8 @@ export const networkRoutes = [
 
         const squidBlocked = response.status === 307
         const text = squidBlocked ? '' : await response.text()
+        const shouldRedactBody =
+          !squidBlocked && config.get('cdpEnvironment') === 'prod'
         const truncated = !squidBlocked && text.length > maxResponseBodyChars
         const body = truncated ? text.slice(0, maxResponseBodyChars) : text
 
@@ -116,13 +119,17 @@ export const networkRoutes = [
           statusText: response.statusText,
           squidBlocked,
           headers: Object.fromEntries(response.headers.entries()),
-          body,
-          truncated,
+          body: shouldRedactBody ? '' : body,
+          bodyRedacted: shouldRedactBody || undefined,
+          bodyLength: shouldRedactBody ? text.length : undefined,
+          truncated: shouldRedactBody ? undefined : truncated,
           client,
           routing,
-          bodyLimitKb: truncated
-            ? Math.round(maxResponseBodyChars / 1024)
-            : undefined,
+          bodyLimitKb: shouldRedactBody
+            ? undefined
+            : truncated
+              ? Math.round(maxResponseBodyChars / 1024)
+              : undefined,
           durationMs: Math.round(performance.now() - start)
         })
       } catch (error) {
