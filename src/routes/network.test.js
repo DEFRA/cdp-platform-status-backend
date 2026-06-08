@@ -1,5 +1,6 @@
 import { vi } from 'vitest'
 import net from 'node:net'
+import { config } from '#/config.js'
 
 vi.mock('node:dns/promises', () => ({
   resolve4: vi.fn().mockResolvedValue(['1.2.3.4', '5.6.7.8']),
@@ -19,6 +20,10 @@ describe('#networkRoutes', () => {
 
   afterAll(async () => {
     await server.stop({ timeout: 0 })
+  })
+
+  afterEach(() => {
+    config.set('cdpEnvironment', 'local')
   })
 
   describe('POST /network/check', () => {
@@ -81,6 +86,36 @@ describe('#networkRoutes', () => {
       })
 
       expect(statusCode).toBe(400)
+    })
+
+    test('Should redact response body and return body length in prod', async () => {
+      config.set('cdpEnvironment', 'prod')
+      fetchMock.mockResponseOnce('hello world', {
+        status: 200,
+        statusText: 'OK',
+        headers: { 'content-type': 'text/plain' }
+      })
+
+      const { statusCode, result } = await server.inject({
+        method: 'POST',
+        url: '/network/check',
+        payload: { url: 'https://www.gov.uk' },
+        headers: { Authorization: authHeader }
+      })
+
+      expect(statusCode).toBe(200)
+      expect(result).toMatchObject({
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+        squidBlocked: false,
+        body: '',
+        bodyRedacted: true,
+        bodyLength: 11,
+        durationMs: expect.any(Number)
+      })
+      expect(result.bodyLimitKb).toBeUndefined()
+      expect(result.truncated).toBeUndefined()
     })
 
     test('Should return ok:false when fetch fails', async () => {
