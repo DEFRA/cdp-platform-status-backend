@@ -1,8 +1,8 @@
 import { setup, teardown } from 'vitest-mongodb'
 
 beforeAll(async () => {
+  // Setup mongo mock
   await setup({
-    type: 'replSet',
     binary: {
       version: 'latest',
       downloadDir: './.cache/mongodb-binaries'
