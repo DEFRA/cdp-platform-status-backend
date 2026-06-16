@@ -281,11 +281,11 @@ docker run -e PORT=3001 -p 3001:3001 cdp-platform-status-backend
 
 There is no `compose.yml` in this repository. Use the frontend repo for local development:
 
-| What | Where |
-|------|--------|
-| Compose file | [../cdp-platform-status-frontend/compose.yml](../cdp-platform-status-frontend/compose.yml) |
+| What                | Where                                                                                              |
+| ------------------- | -------------------------------------------------------------------------------------------------- |
+| Compose file        | [../cdp-platform-status-frontend/compose.yml](../cdp-platform-status-frontend/compose.yml)         |
 | App env (passwords) | [../cdp-platform-status-frontend/compose/app.env](../cdp-platform-status-frontend/compose/app.env) |
-| Floci / Mongo init | [../cdp-platform-status-frontend/compose/](../cdp-platform-status-frontend/compose/) |
+| Floci / Mongo init  | [../cdp-platform-status-frontend/compose/](../cdp-platform-status-frontend/compose/)               |
 
 **Start the full stack:**
 
