@@ -71,36 +71,7 @@ npm run git:hooks
 
 ### AWS services (Floci)
 
-This service requires S3, SQS, and SNS. For local development these are emulated by
-[Floci](https://floci.io) on port `4566`.
-
-**Recommended:** use Docker Compose in the frontend repository — Floci starts automatically and creates the required resources via `compose/floci/start.d/10-setup-resources.sh`. See [Docker Compose](#docker-compose) below.
-
-**Manual setup** (only if you are not using compose):
-
-**1. Start Floci:**
-
-```bash
-docker run -d -p 4566:4566 \
-  -e FLOCI_DEFAULT_REGION=eu-west-2 \
-  hectorvent/floci:latest-aws
-```
-
-**2. Create the required resources** (requires the AWS CLI):
-
-```bash
-aws --endpoint-url=http://localhost:4566 s3 mb s3://platform-status
-aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name platform_status
-aws --endpoint-url=http://localhost:4566 sns create-topic --name platform_status
-```
-
-**3. Configure environment variables:**
-
-Copy `.env.example` to `.env` — the Floci values are already filled in.
-
-```bash
-cp .env.example .env
-```
+This service requires S3, SQS, and SNS. For local development use Docker Compose in the frontend repository — Floci starts automatically and creates the required resources. See [Docker Compose](#docker-compose) below.
 
 ### Development
 
@@ -335,8 +306,6 @@ docker compose down -v --remove-orphans
 - Backend: http://localhost:3101
 - Frontend: http://localhost:3100
 - Admin password (compose): see `compose/app.env` in the frontend repo
-
-To run **only this backend** on the host against compose infra, start compose as above, then copy `.env.example` to `.env` and run `npm run dev`.
 
 ### Dependabot
 
