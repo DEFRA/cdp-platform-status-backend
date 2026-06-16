@@ -44,6 +44,15 @@ nvm use
 
 ## Local development
 
+> **Docker Compose:** This repository does not include a `compose.yml`. The full local stack (Floci, Redis, MongoDB, backend, and frontend) is defined in [cdp-platform-status-frontend/compose.yml](../cdp-platform-status-frontend/compose.yml). Start it from the frontend repo:
+>
+> ```bash
+> cd ../cdp-platform-status-frontend
+> docker compose up --build -d
+> ```
+>
+> Init scripts and compose env files live under `cdp-platform-status-frontend/compose/`. See the [frontend README](../cdp-platform-status-frontend/README.md#docker-compose) for details.
+
 ### Setup
 
 Install application dependencies:
@@ -63,7 +72,11 @@ npm run git:hooks
 ### AWS services (Floci)
 
 This service requires S3, SQS, and SNS. For local development these are emulated by
-[Floci](https://floci.io) — a drop-in LocalStack replacement that runs on the same port (`4566`).
+[Floci](https://floci.io) on port `4566`.
+
+**Recommended:** use Docker Compose in the frontend repository — Floci starts automatically and creates the required resources via `compose/floci/start.d/10-setup-resources.sh`. See [Docker Compose](#docker-compose) below.
+
+**Manual setup** (only if you are not using compose):
 
 **1. Start Floci:**
 
@@ -295,20 +308,35 @@ docker run -e PORT=3001 -p 3001:3001 cdp-platform-status-backend
 
 ### Docker Compose
 
-A local environment with:
+There is no `compose.yml` in this repository. Use the frontend repo for local development:
 
-- Floci for AWS services (S3, SQS, SNS etc)
-- Redis
-- MongoDB
-- This service.
-- A commented out frontend example.
+| What | Where |
+|------|--------|
+| Compose file | [../cdp-platform-status-frontend/compose.yml](../cdp-platform-status-frontend/compose.yml) |
+| App env (passwords) | [../cdp-platform-status-frontend/compose/app.env](../cdp-platform-status-frontend/compose/app.env) |
+| Floci / Mongo init | [../cdp-platform-status-frontend/compose/](../cdp-platform-status-frontend/compose/) |
+
+**Start the full stack:**
 
 ```bash
+cd ../cdp-platform-status-frontend
 docker compose up --build -d
 ```
 
-Mock AWS resources can be created when Floci starts up by editing the scripts in `./compose/floci/start.d/`.
-MongoDB records can also be created when Mongo starts by editing the scripts in `./compose/mongo/`.
+**Stop and remove everything (including Mongo data):**
+
+```bash
+cd ../cdp-platform-status-frontend
+docker compose down -v --remove-orphans
+```
+
+**URLs:**
+
+- Backend: http://localhost:3101
+- Frontend: http://localhost:3100
+- Admin password (compose): see `compose/app.env` in the frontend repo
+
+To run **only this backend** on the host against compose infra, start compose as above, then copy `.env.example` to `.env` and run `npm run dev`.
 
 ### Dependabot
 

@@ -3,14 +3,40 @@ import { SQSClient } from '@aws-sdk/client-sqs'
 import { SNSClient } from '@aws-sdk/client-sns'
 import { config } from '#/config.js'
 
+function createS3Client() {
+  const region = config.get('aws.region')
+  const endpoint = config.get('aws.endpoint')
+
+  if (!endpoint) {
+    return new S3Client({ region })
+  }
+
+  return new S3Client({
+    region,
+    endpoint,
+    forcePathStyle: config.get('aws.s3ForcePathStyle')
+  })
+}
+
 export const awsClients = {
   plugin: {
     name: 'aws-clients',
     version: '1.0.0',
     register(server) {
       const region = config.get('aws.region')
+      const endpoint = config.get('aws.endpoint')
 
-      const s3 = new S3Client({ region })
+      if (endpoint) {
+        server.logger.warn(
+          {
+            endpoint,
+            forcePathStyle: config.get('aws.s3ForcePathStyle')
+          },
+          'S3 client using local AWS emulator endpoint (path-style URLs)'
+        )
+      }
+
+      const s3 = createS3Client()
       const sqs = new SQSClient({ region })
       const sns = new SNSClient({ region })
 
