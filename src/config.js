@@ -126,6 +126,19 @@ export const config = convict({
       default: 'eu-west-2',
       env: 'AWS_REGION'
     },
+    endpoint: {
+      doc: 'AWS endpoint URL for local emulation (Floci/LocalStack)',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'AWS_ENDPOINT_URL'
+    },
+    s3ForcePathStyle: {
+      doc: 'Use path-style S3 URLs (required for Floci/LocalStack)',
+      format: Boolean,
+      default: !isProduction,
+      env: 'S3_FORCE_PATH_STYLE'
+    },
     s3Bucket: {
       doc: 'S3 bucket name for platform status checks',
       format: String,
