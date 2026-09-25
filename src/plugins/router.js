@@ -10,7 +10,13 @@ export const router = {
     name: 'router',
     register: (server, _options) => {
       server.route(
-        [health].concat(statusRoutes, logs, networkRoutes, killRoutes(server), slowRequest)
+        [health].concat(
+          statusRoutes,
+          logs,
+          networkRoutes,
+          killRoutes(server),
+          slowRequest
+        )
       )
     }
   }

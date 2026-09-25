@@ -7,7 +7,7 @@ export const slowRequest = {
   handler: async (request, h) => {
     const seconds = Number(request.query.seconds ?? 60)
 
-    await new Promise(resolve => setTimeout(resolve, seconds * 1000))
+    await new Promise((resolve) => setTimeout(resolve, seconds * 1000))
 
     return h.response({ message: 'success' })
   }
