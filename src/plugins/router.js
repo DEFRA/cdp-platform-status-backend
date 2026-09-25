@@ -1,4 +1,5 @@
 import { health } from '#/routes/health.js'
+import { timeoutTest } from '#/routes/timeout-test.js'
 import { logs } from '#/routes/logs.js'
 import { killRoutes } from '#/routes/kill.js'
 import { networkRoutes } from '#/routes/network.js'
@@ -9,7 +10,7 @@ export const router = {
     name: 'router',
     register: (server, _options) => {
       server.route(
-        [health].concat(statusRoutes, logs, networkRoutes, killRoutes(server))
+        [health].concat(timeoutTest, statusRoutes, logs, networkRoutes, killRoutes(server))
       )
     }
   }
